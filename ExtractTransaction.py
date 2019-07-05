@@ -27,6 +27,10 @@ class Transaction:
     amount           = None
 
 def Clean_line(line):
+
+    if line.find('"",') == 0:
+        line = line[3:]
+
     while True:
         quoteIndex = line.find('"')
         if quoteIndex != -1:
@@ -40,13 +44,11 @@ def Clean_line(line):
                 quoteIndex = quoteIndex + 1
         else:
             break
-    
-    if line.find('"",') == 0:
-        line = line[3:]
 
-    if line[6] == ",":
+    if line[6] == ',':
         first_instance = 1
-        line.replace(",", " ", first_instance)
+        line = line.replace(",", " ", first_instance)
+        line = line.replace(",,", "", first_instance)
 
     return line
 
@@ -73,7 +75,7 @@ def Extract_date(description, statment_month, statement_year):
     day   = int(header_parts[0])
     month = Month_string_to_num(header_parts[1])
     
-    if month < statement_month and month > 0:
+    if month <= statement_month and month > 0:
         year = statement_year
     else:
         year = statement_year - 1
@@ -82,7 +84,8 @@ def Extract_date(description, statment_month, statement_year):
 
 def Line_is_header(parts):
     # Better check for date at the start
-    if len(parts[3]) > 0 and parts[3] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and parts[0][2] == ' ':
+    last = len(parts) - 1
+    if len(parts[last]) > 0 and parts[last] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and parts[0][2] == ' ':
         return True
     else:
         return False
@@ -131,10 +134,6 @@ statement_csv = open("temp.csv", "r")
 statement_month = Month_string_to_num(filename[2:5].upper())
 statement_year = int(filename[5:9])
 
-print(statement_month)
-print(statement_year)
-exit()
-
 transaction = None
 transactions = []
 
@@ -157,17 +156,17 @@ while True:
         break
 
     line = Clean_line(line)
+    print(line)
     parts = line.split(',')
 
     if len(parts) < 4:
         break
 
-    description   = parts[0]
-    debit_amount  = parts[1]
-    credit_amount = parts[2]
-    total_balance = parts[3]
-
     if Line_is_header(parts):
+        description   = parts[0]
+        debit_amount  = parts[1]
+        credit_amount = parts[2]
+        total_balance = parts[3]
         if transaction != None:
             transactions.append(transaction)
             InsertTransactionIntoDatabase(transaction)
@@ -183,7 +182,7 @@ while True:
 transactions.append(transaction)
 InsertTransactionIntoDatabase(transaction)
 
-Print_transactions(transactions)
+#Print_transactions(transactions)
 #Print_transactions(transactions)
 
 os.remove("temp.csv")
