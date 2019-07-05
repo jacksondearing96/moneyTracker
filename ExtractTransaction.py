@@ -27,6 +27,8 @@ class Transaction:
     amount           = None
 
 def Clean_line(line):
+    if line[0] == ',':
+        line = line[1:]
 
     if line.find('"",') == 0:
         line = line[3:]
@@ -53,6 +55,7 @@ def Clean_line(line):
     return line
 
 def Month_string_to_num(month_string):
+    month_string = month_string.upper()
     months = {
         "JAN" : 1,
         "FEB" : 2,
@@ -69,7 +72,7 @@ def Month_string_to_num(month_string):
     }
     return months[month_string]
 
-def Extract_date(description, statment_month, statement_year):
+def Extract_date(description, statement_month, statement_year):
     header_parts = description.split()
 
     day   = int(header_parts[0])
@@ -124,66 +127,74 @@ def InsertTransactionIntoDatabase(transaction):
     moneyTracker.execute(sql, val)
     db.commit()
 
-filename = "13Mar2015.csv"
-converted_csv = open(filename, "r")
-statement_csv = open("temp.csv", "w+")
-statement_csv.write(converted_csv.read())
-statement_csv.close()
-statement_csv = open("temp.csv", "r")
+def ExtractTransactions(filename):
+    converted_csv = open("statements/csvs/" + filename, "r")
+    statement_csv = open("temp.csv", "w+")
+    statement_csv.write(converted_csv.read())
+    statement_csv.close()
+    statement_csv = open("temp.csv", "r")
 
-statement_month = Month_string_to_num(filename[2:5].upper())
-statement_year = int(filename[5:9])
+    statement_month = Month_string_to_num(filename[2:5].upper())
+    statement_year = int(filename[5:9])
 
-transaction = None
-transactions = []
+    transaction = None
+    transactions = []
 
-while True:
-    line = statement_csv.readline()
-    if line.find("OPENING BALANCE") != -1:
-        break
+    while True:
+        line = statement_csv.readline()
+        if line.find("OPENING BALANCE") != -1:
+            break
 
-while True:
-    line = statement_csv.readline()
+    while True:
+        line = statement_csv.readline()
 
-    if line.find("Transaction Details continued") != -1:
-        while True:
-            line = statement_csv.readline()
-            if line.find("SUB TOTAL CARRIED FORWARD") != -1:
+        if line.find("Transaction Details continued") != -1:
+            while True:
                 line = statement_csv.readline()
-                break
+                if line.find("SUB TOTAL CARRIED FORWARD") != -1:
+                    line = statement_csv.readline()
+                    break
 
-    if line.find("Transaction Type") != -1:
-        break
+        if line.find("Transaction Type") != -1:
+            break
 
-    line = Clean_line(line)
-    print(line)
-    parts = line.split(',')
+        if line.find("CLOSINGBALANCE") != -1 or line.find("CLOSING BALANCE") != -1:
+            break
 
-    if len(parts) < 4:
-        break
+        line = Clean_line(line)
+        parts = line.split(',')
 
-    if Line_is_header(parts):
+        if len(parts) < 4:
+            break
+
         description   = parts[0]
         debit_amount  = parts[1]
         credit_amount = parts[2]
         total_balance = parts[3]
-        if transaction != None:
-            transactions.append(transaction)
-            InsertTransactionIntoDatabase(transaction)
-        transaction = Transaction()
-        transaction.info = description
-        transaction.date = Extract_date(description, statement_month, statement_year)
-        transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
-        transaction.amount = Extract_amount(parts, transaction.transaction_type)
-    else:
-        if description.find("EFFECTIVE DATE") == -1:
-            transaction.description += (description + " ")
 
-transactions.append(transaction)
-InsertTransactionIntoDatabase(transaction)
+        if Line_is_header(parts):
+            if transaction != None:
+                transactions.append(transaction)
+                InsertTransactionIntoDatabase(transaction)
+                #Print_transaction(transaction)
+            transaction = Transaction()
+            transaction.info = description
+            transaction.date = Extract_date(description, statement_month, statement_year)
+            transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
+            transaction.amount = Extract_amount(parts, transaction.transaction_type)
+        else:
+            if description.find("EFFECTIVE DATE") == -1:
+                transaction.description += (description + " ")
 
-#Print_transactions(transactions)
-#Print_transactions(transactions)
+    transactions.append(transaction)
+    InsertTransactionIntoDatabase(transaction)
 
-os.remove("temp.csv")
+    #Print_transactions(transactions)
+    #Print_transactions(transactions)
 
+    os.remove("temp.csv")
+    
+for root, dirs, files in os.walk("statements/csvs/"):  
+    for filename in files:
+        print(filename)
+        ExtractTransactions(filename)
