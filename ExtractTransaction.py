@@ -1,3 +1,13 @@
+import mysql.connector as mysql
+
+db = mysql.connect(
+    host = "localhost",
+    user = "root",
+    password = "R%n*^WQLD#*g!8IPO4qsyP0tc&i1#PccEF7BHlvS",
+    database = "moneyTracker"
+)
+moneyTracker = db.cursor()
+
 class Date:
     def __init__(self, day, month, year):
         self.day   = day
@@ -90,6 +100,12 @@ def Print_transactions(transactions):
     for transaction in transactions:
         Print_transaction(transaction)  
 
+def InsertTransactionIntoDatabase(transaction):
+    sql = "INSERT INTO transactions (day, month, year, info, transactor, type, amount) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    val = (transaction.date.day, transaction.date.month, transaction.date.year, transaction.info, transaction.description, transaction.transaction_type, transaction.amount)
+    moneyTracker.execute(sql, val)
+    db.commit()
+
 statement_csv = open("transaction.csv", "r")
 
 transaction = None
@@ -127,6 +143,8 @@ while True:
     if Line_is_header(parts):
         if transaction != None:
             transactions.append(transaction)
+            InsertTransactionIntoDatabase(transaction)
+            exit
             Print_transaction(transaction)
         transaction = Transaction()
         transaction.info = description
@@ -138,6 +156,7 @@ while True:
             transaction.description += (description + " ")
 
 transactions.append(transaction)
+InsertTransactionIntoDatabase(transaction)
 
 Print_transaction(transaction)
 #Print_transactions(transactions)
