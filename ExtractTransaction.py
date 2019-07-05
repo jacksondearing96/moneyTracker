@@ -1,4 +1,5 @@
 import mysql.connector as mysql
+import os
 
 db = mysql.connect(
     host = "localhost",
@@ -66,16 +67,21 @@ def Month_string_to_num(month_string):
     }
     return months[month_string]
 
-def Extract_date(description):
+def Extract_date(description, statment_month, statement_year):
     header_parts = description.split()
 
     day   = int(header_parts[0])
     month = Month_string_to_num(header_parts[1])
-    year = 18
+    
+    if month < statement_month and month > 0:
+        year = statement_year
+    else:
+        year = statement_year - 1
 
     return Date(day, month, year)
 
 def Line_is_header(parts):
+    # Better check for date at the start
     if len(parts[3]) > 0 and parts[3] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and parts[0][2] == ' ':
         return True
     else:
@@ -115,11 +121,19 @@ def InsertTransactionIntoDatabase(transaction):
     moneyTracker.execute(sql, val)
     db.commit()
 
-converted_csv = open("13Mar2015.csv", "r")
+filename = "13Mar2015.csv"
+converted_csv = open(filename, "r")
 statement_csv = open("temp.csv", "w+")
 statement_csv.write(converted_csv.read())
 statement_csv.close()
 statement_csv = open("temp.csv", "r")
+
+statement_month = Month_string_to_num(filename[2:5].upper())
+statement_year = int(filename[5:9])
+
+print(statement_month)
+print(statement_year)
+exit()
 
 transaction = None
 transactions = []
@@ -156,10 +170,10 @@ while True:
     if Line_is_header(parts):
         if transaction != None:
             transactions.append(transaction)
-            #InsertTransactionIntoDatabase(transaction)
+            InsertTransactionIntoDatabase(transaction)
         transaction = Transaction()
         transaction.info = description
-        transaction.date = Extract_date(description)
+        transaction.date = Extract_date(description, statement_month, statement_year)
         transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
         transaction.amount = Extract_amount(parts, transaction.transaction_type)
     else:
@@ -167,8 +181,10 @@ while True:
             transaction.description += (description + " ")
 
 transactions.append(transaction)
-#InsertTransactionIntoDatabase(transaction)
+InsertTransactionIntoDatabase(transaction)
 
 Print_transactions(transactions)
 #Print_transactions(transactions)
+
+os.remove("temp.csv")
 
