@@ -38,7 +38,16 @@ def Clean_line(line):
                     break
                 quoteIndex = quoteIndex + 1
         else:
-            return line
+            break
+    
+    if line.find('"",') == 0:
+        line = line[3:]
+
+    if line[6] == ",":
+        first_instance = 1
+        line.replace(",", " ", first_instance)
+
+    return line
 
 def Month_string_to_num(month_string):
     months = {
@@ -67,7 +76,7 @@ def Extract_date(description):
     return Date(day, month, year)
 
 def Line_is_header(parts):
-    if len(parts[3]) > 0 and parts[3] != '\n':
+    if len(parts[3]) > 0 and parts[3] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and parts[0][2] == ' ':
         return True
     else:
         return False
@@ -106,7 +115,11 @@ def InsertTransactionIntoDatabase(transaction):
     moneyTracker.execute(sql, val)
     db.commit()
 
-statement_csv = open("transaction.csv", "r")
+converted_csv = open("13Mar2015.csv", "r")
+statement_csv = open("temp.csv", "w+")
+statement_csv.write(converted_csv.read())
+statement_csv.close()
+statement_csv = open("temp.csv", "r")
 
 transaction = None
 transactions = []
@@ -143,9 +156,7 @@ while True:
     if Line_is_header(parts):
         if transaction != None:
             transactions.append(transaction)
-            InsertTransactionIntoDatabase(transaction)
-            exit
-            Print_transaction(transaction)
+            #InsertTransactionIntoDatabase(transaction)
         transaction = Transaction()
         transaction.info = description
         transaction.date = Extract_date(description)
@@ -156,8 +167,8 @@ while True:
             transaction.description += (description + " ")
 
 transactions.append(transaction)
-InsertTransactionIntoDatabase(transaction)
+#InsertTransactionIntoDatabase(transaction)
 
-Print_transaction(transaction)
+Print_transactions(transactions)
 #Print_transactions(transactions)
 
