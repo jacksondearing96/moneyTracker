@@ -1,6 +1,7 @@
 #!/bin/bash
 
-for filename in *.pdf
+for filename in *.csv
 do 
-    mv "$filename" "${filename//CompleteFreedomStudent-1090018170140-/}"
+    mv "$filename" "${filename//str_to_remove/}"
 done
+

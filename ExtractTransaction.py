@@ -24,6 +24,7 @@ class Transaction:
     info             = ''
     description      = ''
     transaction_type = None  
+    statement        = None
     amount           = None
 
 def Clean_line(line):
@@ -88,7 +89,7 @@ def Extract_date(description, statement_month, statement_year):
 def Line_is_header(parts):
     # Better check for date at the start
     last = len(parts) - 1
-    if len(parts[last]) > 0 and parts[last] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and parts[0][2] == ' ':
+    if len(parts[last]) > 0 and parts[last] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and (parts[0][2] == ' ' or parts[0][2] == '-'):
         return True
     else:
         return False
@@ -122,8 +123,8 @@ def Print_transactions(transactions):
         Print_transaction(transaction)  
 
 def InsertTransactionIntoDatabase(transaction):
-    sql = "INSERT INTO transactions (day, month, year, info, transactor, type, amount) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-    val = (transaction.date.day, transaction.date.month, transaction.date.year, transaction.info, transaction.description, transaction.transaction_type, transaction.amount)
+    sql = "INSERT INTO transactions (day, month, year, info, transactor, statement, type, amount) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    val = (transaction.date.day, transaction.date.month, transaction.date.year, transaction.info, transaction.description, transaction.statement, transaction.transaction_type, transaction.amount)
     moneyTracker.execute(sql, val)
     db.commit()
 
@@ -164,13 +165,14 @@ def ExtractTransactions(filename):
         line = Clean_line(line)
         parts = line.split(',')
 
-        if len(parts) < 4:
-            break
-
+        number_of_parts = len(parts)
         description   = parts[0]
-        debit_amount  = parts[1]
-        credit_amount = parts[2]
-        total_balance = parts[3]
+        if number_of_parts > 1:
+            debit_amount  = parts[1]
+        if number_of_parts > 2:
+            credit_amount = parts[2]
+        if number_of_parts > 3:
+            total_balance = parts[3]
 
         if Line_is_header(parts):
             if transaction != None:
@@ -178,6 +180,7 @@ def ExtractTransactions(filename):
                 InsertTransactionIntoDatabase(transaction)
                 #Print_transaction(transaction)
             transaction = Transaction()
+            transaction.statement = filename
             transaction.info = description
             transaction.date = Extract_date(description, statement_month, statement_year)
             transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
@@ -196,5 +199,8 @@ def ExtractTransactions(filename):
     
 for root, dirs, files in os.walk("statements/csvs/"):  
     for filename in files:
+        if filename.find('.csv') == -1:
+            continue
         print(filename)
         ExtractTransactions(filename)
+    break
