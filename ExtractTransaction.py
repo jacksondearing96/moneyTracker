@@ -4,7 +4,7 @@ import os
 db = mysql.connect(
     host = "localhost",
     user = "root",
-    password = "R%n*^WQLD#*g!8IPO4qsyP0tc&i1#PccEF7BHlvS",
+    password = "Albymysql1",
     database = "moneyTracker"
 )
 moneyTracker = db.cursor()
@@ -28,6 +28,8 @@ class Transaction:
     amount           = None
 
 def Clean_line(line):
+    line = line.replace('$', '')
+
     if line[0] == ',':
         line = line[1:]
 

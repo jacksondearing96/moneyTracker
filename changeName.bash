@@ -1,7 +1,16 @@
 #!/bin/bash
 
-for filename in *.csv
+# for filename in *.pdf
+# do 
+#     mv "$filename" "${filename//IncentiveSaver-0090113926140-/}"
+# done
+
+for filename in *.pdf
 do 
-    mv "$filename" "${filename//str_to_remove/}"
+    mv "$filename" "${filename//.pdf/}"
 done
 
+for filename in *
+do 
+    mv "$filename" "${filename}_bankSA_IS.pdf"
+done
