@@ -148,7 +148,7 @@
           <!-- Search Table -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Search Table</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Search</h6>
             </div>
             <div class="card-body">
               <div class="table-responsive">
@@ -157,7 +157,9 @@
                     <tr>
                       <th></th>
                       <th>ID</th>
-                      <th>Date</th>
+                      <th>Day</th>
+                      <th>Month</th>
+                      <th>Year</th>
                       <th>Info</th>
                       <th>Description</th>
                       <th>Statement</th>
@@ -184,9 +186,94 @@
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
                     </tr>
                     <tr id="contains-matches">
                       <td>Contains</td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- End search table -->
+
+          <!-- Search button -->
+          <div class="row">
+            <div class="col-md-10"></div>
+            <div class="col-md-2">
+              <button class="card bg-primary text-white shadow" onclick="CreateSearchQuery()">
+                <div class="card-body text-center">
+                  Search
+                </div>
+              </button>
+            </div>
+          </div>
+          <br>
+          
+
+          <!-- Update Table -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Update</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="update-table" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>ID</th>
+                      <th>Day</th>
+                      <th>Month</th>
+                      <th>Year</th>
+                      <th>Info</th>
+                      <th>Description</th>
+                      <th>Statement</th>
+                      <th>Who</th>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Category</th>
+                      <th>Tag1</th>
+                      <th>Tag2</th>
+                    </tr>
+                  </thead>
+                  
+                  <tbody id="search-table-body">
+                    <tr id="update-append">
+                      <td>Append</td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                    </tr>
+                    <tr id="update-replace">
+                      <td>Replace</td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
@@ -208,14 +295,16 @@
           
           <!-- Buttons -->
           <div class="row">
-            <div class="col-md-6"></div>
+            <div class="col-md-8"></div>
+            
             <div class="col-md-2">
               <button class="card bg-danger text-white shadow">
                 <div class="card-body text-center">
                   Delete
                 </div>
-              </div>
-            </button>
+              </button>
+            </div>
+
             <div class="col-md-2">
               <button class="card bg-success text-white shadow">
                 <div class="card-body text-center">
@@ -223,20 +312,14 @@
                 </div>
               </button>
             </div>            
-            <div class="col-md-2">
-              <button class="card bg-primary text-white shadow" onclick="CreateSearchQuery()">
-                <div class="card-body text-center">
-                  Search
-                </div>
-              </button>
-            </div>
+            
           </div>
           <br>
 
           <!-- DataTales Example -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
+              <h6 class="m-0 font-weight-bold text-primary" id="transactions-table-title">Transactions</h6>
             </div>
             <div class="card-body">
               <div class="table-responsive">

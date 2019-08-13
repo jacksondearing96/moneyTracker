@@ -1,8 +1,9 @@
+$('table').dataTable({searching: false, paging: false, info: false});
 
 function GetTransactions(databaseQuery)
 {
-	var transactions_table = document.getElementById("transactions-table");
-	transactions_table.innerHTML = "";
+	var dataTable = $('#dataTable').DataTable();
+	dataTable.clear();
 
 	var resultsRequest = new XMLHttpRequest();
 	resultsRequest.onreadystatechange = function() 
@@ -11,12 +12,11 @@ function GetTransactions(databaseQuery)
 		{
 			var rows = JSON.parse(this.responseText);
 			console.log(rows);
-			for (let i = 0; i < 10; i++)
+			for (let i = 0; i < rows.length; i++)
 			{
-				var dataTable = $('#dataTable').DataTable();
 				dataTable.row.add( [ 
 					rows[i]["id"],
-					rows[i]["date"],
+					rows[i]["day"] + "/" + rows[i]["month"] + "/" + rows[i]["year"],
 					rows[i]["info"],
 					rows[i]["description"],
 					rows[i]["statement"],
@@ -26,8 +26,11 @@ function GetTransactions(databaseQuery)
 					rows[i]["category"],
 					rows[i]["tag1"],
 					rows[i]["tag2"],
-				]).draw();
+				]);
 			}
+			dataTable.draw();
+			var transactionsTitle = document.getElementById("transactions-table-title");
+			transactionsTitle.innerText = "Transactions " + "(" + rows.length + ")"
 		}
 	};
 
@@ -85,5 +88,3 @@ function CreateSearchQuery()
 	console.log(databaseQuery);
 	GetTransactions(databaseQuery);
 }
-
-$('table').dataTable({searching: false, paging: false, info: false});

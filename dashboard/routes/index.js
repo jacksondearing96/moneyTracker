@@ -12,7 +12,9 @@ class Transaction
   constructor()
   {
     this.id = "";
-    this.date = "";
+    this.day = "";
+    this.month = "";
+    this.year = "";
     this.info = "";
     this.description = "";
     this.statement = "";
@@ -24,24 +26,6 @@ class Transaction
     this.tag2 = "";
   }
 
-}
-
-function GenerateTransactioRow(transaction)
-{
-  var transaction_row = {
-    "id" : transaction.id,
-    "date" : transaction.date,
-    "info" : transaction.info,
-    "description" : transaction.description,
-    "statement" : transaction.statement,
-    "who" : transaction.who,
-    "type" : transaction.type,
-    "amount" : transaction.amount,
-    "category" : transaction.category,
-    "tag1" : transaction.tag1,
-    "tag2" : transaction.tag2
-  }
-  return transaction_row;
 }
 
 router.post('/GetTransactions', function(req,res) 
@@ -68,15 +52,21 @@ router.post('/GetTransactions', function(req,res)
       transactionRows = [];
       for (var i = 0; i < transactions.length; i++)
       {
-        var transaction = new Transaction;
-        transaction.id = transactions[i].id;
-        transaction.date = transactions[i].day + "/" + transactions[i].month + "/" + transactions[i].year;
-        transaction.info = transactions[i].info;
-        transaction.description = transactions[i].transactor;
-        transaction.statement = transactions[i].statement;
-        transaction.type = transactions[i].type;
-        transaction.amount = transactions[i].amount;
-        transactionRows[transactionRows.length] = GenerateTransactioRow(transaction);
+        transactionRows[transactionRows.length] = {
+          "id" : transactions[i].id,
+          "day" : transactions[i].day,
+          "month" : transactions[i].month,
+          "year" : transactions[i].year,
+          "info" : transactions[i].info,
+          "description" : transactions[i].transactor,
+          "statement" : transactions[i].statement,
+          "who" : transactions[i].who,
+          "type" : transactions[i].type,
+          "amount" : transactions[i].amount,
+          "category" : transactions[i].category,
+          "tag1" : transactions[i].tag1,
+          "tag2" : transactions[i].tag2
+        };
       }
       res.send(transactionRows);
     });
