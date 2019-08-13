@@ -45,9 +45,11 @@ function GenerateTransactioRowHTML(transaction)
   return transaction_row;
 }
 
-// accept a 'team' object, populate it's attributes and send back
-router.get('/GetTransactions', function(req,res) 
+router.post('/GetTransactions', function(req,res) 
 {
+  var databaseQuery = req.body["query"];
+  console.log("QUERY>> ", databaseQuery);
+
   console.log("Attempting to connect to database");
 
   var con = mysql.createConnection({
@@ -61,10 +63,9 @@ router.get('/GetTransactions', function(req,res)
     if (err) throw err;
     console.log("Connected!");
 
-    con.query("SELECT * FROM transactions", function (err, transactions, fields) {
+    con.query(databaseQuery, function (err, transactions, fields) {
       if (err) throw err;
       
-      console.log(transactions);
       transactionRowsHTML = "";
       for (var i = 0; i < transactions.length; i++)
       {

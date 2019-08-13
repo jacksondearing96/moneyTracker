@@ -1,6 +1,8 @@
 
 function GetTransactions()
 {
+	var databaseQuery = "SELECT * FROM transactions";
+
 	var resultsRequest = new XMLHttpRequest();
 	resultsRequest.onreadystatechange = function() 
 	{
@@ -13,9 +15,9 @@ function GetTransactions()
 		}
 	};
 
-	resultsRequest.open("GET", "../GetTransactions", true);
+	resultsRequest.open("POST", "../GetTransactions", true);
 	resultsRequest.setRequestHeader("content-type", "application/json");
-	resultsRequest.send();
+	resultsRequest.send(JSON.stringify({ query : databaseQuery }));
 }
 
 GetTransactions();
