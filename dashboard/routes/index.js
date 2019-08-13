@@ -26,22 +26,21 @@ class Transaction
 
 }
 
-function GenerateTransactioRowHTML(transaction)
+function GenerateTransactioRow(transaction)
 {
-  var transaction_row = 
-  '<tr> \
-      <td>' + transaction.id + '</td>\
-      <td>' + transaction.date + '</td>\
-      <td>' + transaction.info + '</td>\
-      <td>' + transaction.description + '</td>\
-      <td>' + transaction.statement + '</td>\
-      <td>' + transaction.who + '</td>\
-      <td>' + transaction.type + '</td>\
-      <td>' + transaction.amount + '</td>\
-      <td>' + transaction.category + '</td>\
-      <td>' + transaction.tag1 + '</td>\
-      <td>' + transaction.tag2 + '</td>\
-  </tr>';
+  var transaction_row = {
+    "id" : transaction.id,
+    "date" : transaction.date,
+    "info" : transaction.info,
+    "description" : transaction.description,
+    "statement" : transaction.statement,
+    "who" : transaction.who,
+    "type" : transaction.type,
+    "amount" : transaction.amount,
+    "category" : transaction.category,
+    "tag1" : transaction.tag1,
+    "tag2" : transaction.tag2
+  }
   return transaction_row;
 }
 
@@ -66,7 +65,7 @@ router.post('/GetTransactions', function(req,res)
     con.query(databaseQuery, function (err, transactions, fields) {
       if (err) throw err;
       
-      transactionRowsHTML = "";
+      transactionRows = [];
       for (var i = 0; i < transactions.length; i++)
       {
         var transaction = new Transaction;
@@ -77,10 +76,9 @@ router.post('/GetTransactions', function(req,res)
         transaction.statement = transactions[i].statement;
         transaction.type = transactions[i].type;
         transaction.amount = transactions[i].amount;
-        transactionRowsHTML += GenerateTransactioRowHTML(transaction);
+        transactionRows[transactionRows.length] = GenerateTransactioRow(transaction);
       }
-      
-      res.send(transactionRowsHTML);
+      res.send(transactionRows);
     });
   });
 });

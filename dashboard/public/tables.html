@@ -17,9 +17,19 @@
 
   <!-- Custom styles for this template -->
   <link href="css/sb-admin-2.min.css" rel="stylesheet">
+  <link href="css/moneyTracker.css">
 
   <!-- Custom styles for this page -->
   <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+  <style>
+    button {
+      border-width: 0px;
+      width: 100%;
+      text-align: center;
+    }
+
+  </style>
 
 </head>
 
@@ -135,10 +145,98 @@
           <!-- Page Heading -->
           <h1 class="h3 mb-2 text-gray-800">Transaction Database</h1>
 
+          <!-- Search Table -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Search Table</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="search-table" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>ID</th>
+                      <th>Date</th>
+                      <th>Info</th>
+                      <th>Description</th>
+                      <th>Statement</th>
+                      <th>Who</th>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Category</th>
+                      <th>Tag1</th>
+                      <th>Tag2</th>
+                    </tr>
+                  </thead>
+                  
+                  <tbody id="search-table-body">
+                    <tr id="exact-matches">
+                      <td>Exact</td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                    </tr>
+                    <tr id="contains-matches">
+                      <td>Contains</td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                      <td contenteditable="true"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- End search table -->
+          
+          <!-- Buttons -->
+          <div class="row">
+            <div class="col-md-6"></div>
+            <div class="col-md-2">
+              <button class="card bg-danger text-white shadow">
+                <div class="card-body text-center">
+                  Delete
+                </div>
+              </div>
+            </button>
+            <div class="col-md-2">
+              <button class="card bg-success text-white shadow">
+                <div class="card-body text-center">
+                  Update
+                </div>
+              </button>
+            </div>            
+            <div class="col-md-2">
+              <button class="card bg-primary text-white shadow" onclick="CreateSearchQuery()">
+                <div class="card-body text-center">
+                  Search
+                </div>
+              </button>
+            </div>
+          </div>
+          <br>
+
           <!-- DataTales Example -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
             </div>
             <div class="card-body">
               <div class="table-responsive">
