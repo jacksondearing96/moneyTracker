@@ -50,12 +50,12 @@ function SearchDatabase()
 {
 	console.log("Creating search query");
 	var databaseQuery = "SELECT * FROM transactions";
-	databaseQuery += CurrentConditionQuery();
+	databaseQuery += CurrentSearchCondition();
 	console.log("Querying: ", databaseQuery);
 	QueryDatabase(databaseQuery);
 }
 
-function CurrentConditionQuery()
+function CurrentSearchCondition()
 {
 	var databaseQuery = "";
 	var databaseCols = [ "id", "day", "month", "year", "info", "transactor", "statement", "who", "type", "amount", "category", "tag1", "tag2" ];
@@ -74,7 +74,15 @@ function CurrentConditionQuery()
 			{
 				databaseQuery += " AND ";
 			}
-			databaseQuery += databaseCols[i-1] + " LIKE '%" + searchTableEntries[i].innerHTML + "%'";
+			
+			if (searchTableEntries[i].innerHTML == "NULL")
+			{
+				databaseQuery += databaseCols[i-1] + " IS null";
+			}
+			else
+			{
+				databaseQuery += databaseCols[i-1] + " LIKE '%" + searchTableEntries[i].innerHTML + "%'";
+			}
 		}
 	}
 
@@ -92,10 +100,49 @@ function CurrentConditionQuery()
 			{
 				databaseQuery += " AND ";
 			}
-			databaseQuery += databaseCols[i-1] + "='" + searchTableEntries[i].innerHTML + "'";
+
+			if (searchTableEntries[i].innerHTML == "NULL")
+			{
+				databaseQuery += databaseCols[i-1] + " IS null";
+			}
+			else
+			{
+				databaseQuery += databaseCols[i-1] + "='" + searchTableEntries[i].innerHTML + "'";
+			}
+			
 		}
 	}
 	databaseQuery += ";";
+	return databaseQuery;
+}
+
+function CurrentUpdateCondition()
+{
+	var databaseQuery = "";
+	var databaseCols = [ "id", "day", "month", "year", "info", "transactor", "statement", "who", "type", "amount", "category", "tag1", "tag2" ];
+
+	var updateTableEntries = document.querySelectorAll("#update-replace td");
+	for (let i = 1; i < updateTableEntries.length; i++)
+	{
+		if (updateTableEntries[i].innerHTML != "")
+		{
+			var quotation = "'";
+			if (databaseCols[i-1] == "id"
+			|| databaseCols[i-1] == "day"
+			|| databaseCols[i-1] == "month"
+			|| databaseCols[i-1] == "year"
+			|| databaseCols[i-1] == "amount")
+			{
+				quotation = "";
+			}
+			databaseQuery += databaseCols[i-1] + "=" + quotation + updateTableEntries[i].innerHTML + quotation + ",";
+		}
+	}
+	
+	if (databaseQuery[databaseQuery.length - 1] == ',')
+	{
+		databaseQuery = databaseQuery.substr(0, databaseQuery.length - 1);
+	}
 	return databaseQuery;
 }
 
@@ -109,15 +156,26 @@ function Delete()
 	{
 		console.log("Inserting into backup database");
 		var databaseQuery = "INSERT INTO removed_transactions SELECT * FROM transactions";
-		databaseQuery += CurrentConditionQuery();
+		databaseQuery += CurrentSearchCondition();
 		QueryDatabase(databaseQuery);
 		console.log("Deleting from primary database");
 		var databaseQuery = "DELETE FROM transactions";
-		databaseQuery += CurrentConditionQuery();
+		databaseQuery += CurrentSearchCondition();
 		console.log("Delete Query: ", databaseQuery);
-		// QueryDatabase(databaseQuery);
+		QueryDatabase(databaseQuery);
 		SearchDatabase();
 	}
+}
+
+function Update()
+{
+	console.log("Updating database");
+	var databaseQuery = "UPDATE transactions SET ";
+	databaseQuery += CurrentUpdateCondition();
+	databaseQuery += CurrentSearchCondition();
+	console.log(databaseQuery);
+	QueryDatabase(databaseQuery);
+	SearchDatabase();
 }
 
 function CommitDatabase()

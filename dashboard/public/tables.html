@@ -235,7 +235,7 @@
               <div class="table-responsive">
                 <table class="table table-bordered" id="update-table" width="100%" cellspacing="0">
                   <thead>
-                    <tr>
+                    <tr id="update-labels">
                       <th></th>
                       <th>ID</th>
                       <th>Day</th>
@@ -254,7 +254,7 @@
                   </thead>
                   
                   <tbody id="search-table-body">
-                    <tr id="update-append">
+                    <!-- <tr id="update-append">
                       <td>Append</td>
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
@@ -269,7 +269,7 @@
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
                       <td contenteditable="true"></td>
-                    </tr>
+                    </tr> -->
                     <tr id="update-replace">
                       <td>Replace</td>
                       <td contenteditable="true"></td>
@@ -306,7 +306,7 @@
             </div>
 
             <div class="col-md-2">
-              <button class="card bg-success text-white shadow">
+              <button class="card bg-success text-white shadow" onclick="Update()">
                 <div class="card-body text-center">
                   Update
                 </div>
