@@ -216,7 +216,7 @@
           <div class="row">
             <div class="col-md-10"></div>
             <div class="col-md-2">
-              <button class="card bg-primary text-white shadow" onclick="CreateSearchQuery()">
+              <button class="card bg-primary text-white shadow" onclick="SearchDatabase()">
                 <div class="card-body text-center">
                   Search
                 </div>
@@ -295,10 +295,10 @@
           
           <!-- Buttons -->
           <div class="row">
-            <div class="col-md-8"></div>
+            <div class="col-md-6"></div>
             
             <div class="col-md-2">
-              <button class="card bg-danger text-white shadow">
+              <button class="card bg-danger text-white shadow" onclick="Delete()">
                 <div class="card-body text-center">
                   Delete
                 </div>
@@ -311,7 +311,15 @@
                   Update
                 </div>
               </button>
-            </div>            
+            </div>    
+            
+            <div class="col-md-2">
+              <button class="card bg-info text-white shadow" onclick="CommitDatabase()">
+                <div class="card-body text-center">
+                  Commit
+                </div>
+              </button>
+            </div>      
             
           </div>
           <br>

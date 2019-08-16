@@ -1,6 +1,7 @@
 var express   = require('express');
 var router = express.Router();
 var mysql = require('mysql');
+const { exec } = require('child_process');
 
 router.get('/', function(req, res, next) 
 {
@@ -47,7 +48,12 @@ router.post('/GetTransactions', function(req,res)
     console.log("Connected!");
 
     con.query(databaseQuery, function (err, transactions, fields) {
-      if (err) throw err;
+      if (err)
+      {
+        console.log("ERROR in query !!!");
+        res.send("ERROR");
+        return;
+      } 
       
       transactionRows = [];
       for (var i = 0; i < transactions.length; i++)
@@ -72,5 +78,37 @@ router.post('/GetTransactions', function(req,res)
     });
   });
 });
+
+router.get('/CommitDatabase', function(req, res) 
+{
+  var commands = ["mysqldump -p -u root moneyTracker > ../moneyTracker.sql"];
+  for (let i = 0; i < commands.length; i++)
+  {
+    if (Execute(commands[i]) == false)
+    {
+      res.send("ERROR");
+    }
+  }
+  res.send("SUCCESS");
+});
+
+function Execute(command)
+{
+  exec(command, (err, stdout, stderr) => {
+    if (err) 
+    {
+      //some err occurred
+      console.error(err);
+      return false;
+    } 
+    else 
+    {
+      // the *entire* stdout and stderr (buffered)
+      console.log(`stdout: ${stdout}`);
+      console.log(`stderr: ${stderr}`);
+      return true;
+    }
+  });
+}
 
 module.exports = router;
