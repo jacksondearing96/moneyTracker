@@ -2,6 +2,7 @@ var express   = require('express');
 var router = express.Router();
 var mysql = require('mysql');
 const { exec } = require('child_process');
+const fs = require('fs');
 
 router.get('/', function(req, res, next) 
 {
@@ -16,15 +17,10 @@ class Transaction
     this.day = "";
     this.month = "";
     this.year = "";
-    this.info = "";
     this.description = "";
-    this.statement = "";
     this.who = "";
     this.type = "";
     this.amount = "";
-    this.category = "";
-    this.tag1 = "";
-    this.tag2 = "";
   }
 
 }
@@ -63,15 +59,10 @@ router.post('/GetTransactions', function(req,res)
           "day" : transactions[i].day,
           "month" : transactions[i].month,
           "year" : transactions[i].year,
-          "info" : transactions[i].info,
-          "description" : transactions[i].transactor,
-          "statement" : transactions[i].statement,
+          "description" : transactions[i].description,
           "who" : transactions[i].who,
           "type" : transactions[i].type,
           "amount" : transactions[i].amount,
-          "category" : transactions[i].category,
-          "tag1" : transactions[i].tag1,
-          "tag2" : transactions[i].tag2
         };
       }
       res.send(transactionRows);
@@ -110,5 +101,49 @@ function Execute(command)
     }
   });
 }
+
+router.post('/LogQuery', function(req, res) 
+{
+  var databaseQuery = req.body['query'];
+  fs.appendFile('db_changes.txt', databaseQuery, function (err) {
+    if (err) res.send("ERROR");
+    res.send("SUCCESS");
+  });
+});
+
+router.get('/GetTotalSpending', function(req, res) 
+{
+  var query = "SELECT SUM(amount) FROM transactions WHERE type = 'DEBIT'";
+
+  res.send("SUCCESS");
+});
+
+router.post('/GetValueFromDatabase', function(req,res) 
+{
+  var databaseQuery = req.body["query"];
+
+  var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "Albymysql1",
+    database: "moneyTracker"
+  });
+
+  con.connect(function(err) {
+    if (err) throw err;
+
+    con.query(databaseQuery, function (err, value) {
+      if (err)
+      {
+        console.log("ERROR in query !!!");
+        res.send("ERROR");
+        return;
+      } 
+      if (value.length != 0) {
+        res.send(Object.values(value[0])[0].toFixed(2));
+      }
+    });
+  });
+});
 
 module.exports = router;

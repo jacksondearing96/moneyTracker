@@ -1,0 +1,11 @@
+- Implement a 'clean' function where the csv's can be
+cleaned directly from multiple spaces, tabs etc.
+Make this run automatically when database is built
+
+- Implement tags. Add to database. Add to FE table with scroll bar?
+
+- Implement a record of database amendments
+
+- Visual for UPDATE and COMMIT buttons 
+
+- Display amount function for money values

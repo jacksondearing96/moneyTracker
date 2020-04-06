@@ -9,6 +9,31 @@ db = mysql.connect(
 )
 moneyTracker = db.cursor()
 
+def CreateTableWithNameQuery(table_name):
+    create_table_query = """
+    USE moneyTracker;
+    CREATE TABLE IF NOT EXISTS """ + table_name + """
+    ( 
+        id INT AUTO_INCREMENT,
+        day TINYINT NOT NULL CHECK (day > 0 AND day < 32),
+        month TINYINT NOT NULL CHECK (month > 0 AND month < 13),
+        year YEAR(4) NOT NULL,
+        description VARCHAR(100),
+        who VARCHAR(50),
+        type ENUM ('DEBIT','CREDIT') NOT NULL,
+        amount FLOAT NOT NULL CHECK (amount > 0),
+        PRIMARY KEY (id) 
+    );
+
+    CREATE TABLE IF NOT EXISTS tags
+    (
+        id INT,
+        tag VARCHAR(50),
+        PRIMARY (id, tag)
+    );
+    """
+    return create_table_query
+
 class Date:
     def __init__(self, day, month, year):
         self.day   = day
@@ -21,93 +46,34 @@ class Transaction_Type:
 
 class Transaction:
     date             = None
-    info             = ''
     description      = ''
     transaction_type = None  
-    statement        = None
     amount           = None
 
 def Clean_line(line):
-    line = line.replace('$', '')
+    line = line.replace('\t', ' ')
+    line = line.replace(' ,', ',')
+    return line.replace('  ', ' ')
 
-    if line[0] == ',':
-        line = line[1:]
-
-    if line.find('"",') == 0:
-        line = line[3:]
-
-    while True:
-        quoteIndex = line.find('"')
-        if quoteIndex != -1:
-            line = line[:quoteIndex] + line[quoteIndex+1:]
-            while True:
-                if line[quoteIndex] == ',':
-                    line = line[:quoteIndex] + line[quoteIndex+1:]
-                if line[quoteIndex] == '"':
-                    line = line[:quoteIndex] + line[quoteIndex+1:]
-                    break
-                quoteIndex = quoteIndex + 1
-        else:
-            break
-
-    if line[6] == ',':
-        first_instance = 1
-        line = line.replace(",", " ", first_instance)
-        line = line.replace(",,", "", first_instance)
-
-    return line
-
-def Month_string_to_num(month_string):
-    month_string = month_string.upper()
-    months = {
-        "JAN" : 1,
-        "FEB" : 2,
-        "MAR" : 3,
-        "APR" : 4,
-        "MAY" : 5,
-        "JUN" : 6,
-        "JUL" : 7,
-        "AUG" : 8,
-        "SEP" : 9,
-        "OCT" : 10,
-        "NOV" : 11,
-        "DEC" : 12
-    }
-    return months[month_string]
-
-def Extract_date(description, statement_month, statement_year):
-    header_parts = description.split()
-
-    day   = int(header_parts[0])
-    month = Month_string_to_num(header_parts[1])
-    
-    if month <= statement_month and month > 0:
-        year = statement_year
-    else:
-        year = statement_year - 1
-
+def Extract_date(date_str):
+    date_parts = date_str.split('/')
+    day   = int(date_parts[0])
+    month = int(date_parts[1])
+    year = int(date_parts[2])
     return Date(day, month, year)
 
-def Line_is_header(parts):
-    # Better check for date at the start
-    last = len(parts) - 1
-    if len(parts[last]) > 0 and parts[last] != '\n' and parts[0][0].isdigit() and parts[0][1].isdigit() and (parts[0][2] == ' ' or parts[0][2] == '-'):
-        return True
-    else:
-        return False
+def Extract_date_american(date_str):
+    date_parts = date_str.split('/')
+    day   = int(date_parts[1])
+    month = int(date_parts[0])
+    year = int(date_parts[2])
+    return Date(day, month, year)
 
 def Determine_transaction_type(debit_amount, credit_amount):
-    if debit_amount:
-        return "DEBIT"
-    if credit_amount: 
+    if debit_amount == 0:
         return "CREDIT"
-
-def Extract_amount(parts, transaction_type):
-    if transaction_type == "DEBIT":
-        return float(parts[1])
-    if transaction_type == "CREDIT":
-        return float(parts[2])
-    print("ERROR (!) Trying to determine amount for transaction with no type")
+    else: 
+        return "DEBIT"
 
 def Print_transaction(transaction):
     print("\n$$$ Transaction $$$")
@@ -116,7 +82,6 @@ def Print_transaction(transaction):
                             str(transaction.date.year))
     print("\tType:        " + transaction.transaction_type)
     print("\tAmount:      $" + str(transaction.amount))
-    print("\tInfo:        " + str(transaction.info))
     print("\tDescription: " + transaction.description)
     print("\n")  
 
@@ -124,85 +89,127 @@ def Print_transactions(transactions):
     for transaction in transactions:
         Print_transaction(transaction)  
 
-def InsertTransactionIntoDatabase(transaction):
-    sql = "INSERT INTO transactions (day, month, year, info, transactor, statement, type, amount) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    val = (transaction.date.day, transaction.date.month, transaction.date.year, transaction.info, transaction.description, transaction.statement, transaction.transaction_type, transaction.amount)
+def InsertTransactionIntoDatabase(transaction, table_name):
+    sql = "INSERT INTO " + table_name + " (day, month, year, description, type, amount) VALUES (%s, %s, %s, %s, %s, %s);"
+    val = (transaction.date.day, transaction.date.month, transaction.date.year, transaction.description, transaction.transaction_type, transaction.amount)
     moneyTracker.execute(sql, val)
     db.commit()
 
-def ExtractTransactions(filename):
-    converted_csv = open("statements/csvs/" + filename, "r")
-    statement_csv = open("temp.csv", "w+")
-    statement_csv.write(converted_csv.read())
-    statement_csv.close()
-    statement_csv = open("temp.csv", "r")
+def GetTransactionPeoplesChoice(parts):
+    amount = parts[3]
+    if amount >= 0:
+        credit_amount = amount
+        debit_amount = 0
+    else:
+        credit_amount = 0
+        debit_amount = abs(float(amount))
 
-    statement_month = Month_string_to_num(filename[2:5].upper())
-    statement_year = int(filename[5:9])
+    transaction = Transaction()
+    transaction.description = parts[2]
+    transaction.date = Extract_date(parts[1])
+    transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
+    transaction.amount = abs(float(amount))
+    transaction.who = '_PC'
+    return transaction
 
-    transaction = None
-    transactions = []
+def GetTransactionChase(parts):
+    amount = parts[3]
+    if amount >= 0:
+        credit_amount = amount
+        debit_amount = 0
+    else:
+        credit_amount = 0
+        debit_amount = abs(float(amount))
 
-    while True:
-        line = statement_csv.readline()
-        if line.find("OPENING BALANCE") != -1:
-            break
+    transaction = Transaction()
+    transaction.description = parts[2]
+    transaction.date = Extract_date_american(parts[1])
+    transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
+    transaction.amount = abs(float(amount))
+    transaction.who = '_Chase'
+    return transaction
 
-    while True:
-        line = statement_csv.readline()
+def GetTransactionDefault(parts):
+    debit_amount = parts[2]
+    credit_amount = parts[3]
+    if debit_amount == '':
+        debit_amount = 0
+    if credit_amount == '':
+        credit_amount = 0
+    transaction = Transaction()
+    transaction.description = parts[1]
+    transaction.date = Extract_date(parts[0])
+    transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
+    transaction.amount = float(credit_amount) + float(debit_amount) # add these because one will always be zero
+    transaction.who = '_default'
+    return transaction
 
-        if line.find("Transaction Details continued") != -1:
-            while True:
-                line = statement_csv.readline()
-                if line.find("SUB TOTAL CARRIED FORWARD") != -1:
-                    line = statement_csv.readline()
-                    break
-
-        if line.find("Transaction Type") != -1:
-            break
-
-        if line.find("CLOSINGBALANCE") != -1 or line.find("CLOSING BALANCE") != -1:
-            break
-
+def ExtractTransactionsFromFile(filename, table_name):
+    transactions_list = open(filename, "r")
+    transactions_list.readline() # ignore headers
+    line = transactions_list.readline()
+    transaction_read_count = 0
+    while line:
+        transaction_read_count = transaction_read_count + 1
         line = Clean_line(line)
         parts = line.split(',')
 
-        number_of_parts = len(parts)
-        description   = parts[0]
-        if number_of_parts > 1:
-            debit_amount  = parts[1]
-        if number_of_parts > 2:
-            credit_amount = parts[2]
-        if number_of_parts > 3:
-            total_balance = parts[3]
-
-        if Line_is_header(parts):
-            if transaction != None:
-                transactions.append(transaction)
-                InsertTransactionIntoDatabase(transaction)
-                #Print_transaction(transaction)
-            transaction = Transaction()
-            transaction.statement = filename
-            transaction.info = description
-            transaction.date = Extract_date(description, statement_month, statement_year)
-            transaction.transaction_type = Determine_transaction_type(debit_amount, credit_amount)
-            transaction.amount = Extract_amount(parts, transaction.transaction_type)
+        if filename.find('peoplesChoice') != -1:
+            transaction = GetTransactionPeoplesChoice(parts)
+        elif filename.find('chase') != -1:
+            transaction = GetTransactionChase(parts)
         else:
-            if description.find("EFFECTIVE DATE") == -1:
-                transaction.description += (description + " ")
+            transaction = GetTransactionDefault(parts)
+        InsertTransactionIntoDatabase(transaction, table_name)
+        line = transactions_list.readline()
+    return transaction_read_count
 
-    transactions.append(transaction)
-    InsertTransactionIntoDatabase(transaction)
-
-    #Print_transactions(transactions)
-    #Print_transactions(transactions)
-
-    os.remove("temp.csv")
+def PrintExtractionSummary(transactions_read_count, table_name):
+    print('')
+    print('Read ' + str(transactions_read_count) + ' transactions')
+    query = 'SELECT * FROM ' + table_name + ';'
+    moneyTracker.execute(query)
+    print('Database contains ' + str(len(moneyTracker.fetchall())) + ' ' + table_name)
     
-for root, dirs, files in os.walk("statements/csvs/"):  
-    for filename in files:
-        if filename.find('.csv') == -1:
-            continue
-        print(filename)
-        ExtractTransactions(filename)
-    break
+def ExtractTransactionsFromAllFiles(directory_name, table_name, logResults):
+    transactions_read_count = 0
+    for root, dirs, files in os.walk(directory_name):
+        for filename in files:
+            if filename.find('.csv') == -1:
+                continue
+            transactions_read_count += ExtractTransactionsFromFile(directory_name + '/' + filename, table_name)
+            if logResults:
+                print(filename)
+    if logResults:
+        PrintExtractionSummary(transactions_read_count, table_name)
+
+def CheckExists(query):
+    moneyTracker.execute(query)
+    result = moneyTracker.fetchall()
+    if len(result) == 0:
+        print('FAIL, ', query)
+        return False
+    return True
+
+
+def test():
+    test_table = 'test_table'
+    moneyTracker.execute('TRUNCATE TABLE test_table;')
+    dontLogResults = False
+    ExtractTransactionsFromAllFiles('test_data', test_table, dontLogResults)
+    moneyTracker.execute('SELECT * FROM test_table')
+    result = moneyTracker.fetchall()
+    if len(result) != 9:
+        print('FAIL, ', query)
+        return False
+    queries = ("SELECT * FROM test_table;", "SELECT * FROM test_table WHERE description LIKE '%JETBLUE%' AND amount LIKE 235.2;","SELECT * FROM test_table WHERE day = 27;", "SELECT * FROM test_table WHERE amount LIKE 433.09;")
+    for query in queries:
+        if not CheckExists(query):
+            return False
+    return True
+
+if test():
+    moneyTracker.execute('TRUNCATE TABLE transactions;')
+    logResults = True
+    ExtractTransactionsFromAllFiles('transaction_history', 'transactions', logResults)
+

@@ -4,7 +4,6 @@ function QueryDatabase(databaseQuery)
 {
 	var dataTable = $('#dataTable').DataTable();
 	dataTable.clear();
-
 	var resultsRequest = new XMLHttpRequest();
 	resultsRequest.onreadystatechange = function() 
 	{
@@ -22,15 +21,10 @@ function QueryDatabase(databaseQuery)
 				dataTable.row.add( [ 
 					rows[i]["id"],
 					rows[i]["day"] + "/" + rows[i]["month"] + "/" + rows[i]["year"],
-					rows[i]["info"],
 					rows[i]["description"],
-					rows[i]["statement"],
 					rows[i]["who"],
 					rows[i]["type"],
 					rows[i]["amount"],
-					rows[i]["category"],
-					rows[i]["tag1"],
-					rows[i]["tag2"],
 				]);
 			}
 			dataTable.draw();
@@ -38,7 +32,6 @@ function QueryDatabase(databaseQuery)
 			transactionsTitle.innerText = "Transactions " + "(" + rows.length + ")"
 		}
 	};
-
 	resultsRequest.open("POST", "../GetTransactions", true);
 	resultsRequest.setRequestHeader("content-type", "application/json");
 	resultsRequest.send(JSON.stringify({ query : databaseQuery }));
@@ -58,7 +51,7 @@ function SearchDatabase()
 function CurrentSearchCondition()
 {
 	var databaseQuery = "";
-	var databaseCols = [ "id", "day", "month", "year", "info", "transactor", "statement", "who", "type", "amount", "category", "tag1", "tag2" ];
+	var databaseCols = [ "id", "day", "month", "year", "description", "who", "type", "amount" ];
 	var searchTableEntries = document.querySelectorAll("#contains-matches td");
 	var firstCondition = true;
 	for (let i = 1; i < searchTableEntries.length; i++)
@@ -112,14 +105,13 @@ function CurrentSearchCondition()
 			
 		}
 	}
-	databaseQuery += ";";
 	return databaseQuery;
 }
 
 function CurrentUpdateCondition()
 {
 	var databaseQuery = "";
-	var databaseCols = [ "id", "day", "month", "year", "info", "transactor", "statement", "who", "type", "amount", "category", "tag1", "tag2" ];
+	var databaseCols = [ "id", "day", "month", "year", "description", "who", "type", "amount" ];
 
 	var updateTableEntries = document.querySelectorAll("#update-replace td");
 	for (let i = 1; i < updateTableEntries.length; i++)
@@ -156,13 +148,14 @@ function Delete()
 	{
 		console.log("Inserting into backup database");
 		var databaseQuery = "INSERT INTO removed_transactions SELECT * FROM transactions";
-		databaseQuery += CurrentSearchCondition();
+		databaseQuery += CurrentSearchCondition() + ';';
 		QueryDatabase(databaseQuery);
 		console.log("Deleting from primary database");
 		var databaseQuery = "DELETE FROM transactions";
-		databaseQuery += CurrentSearchCondition();
+		databaseQuery += CurrentSearchCondition() + ';'
 		console.log("Delete Query: ", databaseQuery);
 		QueryDatabase(databaseQuery);
+		LogQuery(databaseQuery);
 		SearchDatabase();
 	}
 }
@@ -173,6 +166,9 @@ function Update()
 	var databaseQuery = "UPDATE transactions SET ";
 	databaseQuery += CurrentUpdateCondition();
 	databaseQuery += CurrentSearchCondition();
+	databaseQuery += ';'
+	// Open file and append to it
+	// var logFile = open('database_changes.txt', 'a');
 	console.log(databaseQuery);
 	QueryDatabase(databaseQuery);
 	SearchDatabase();
@@ -199,4 +195,26 @@ function CommitDatabase()
 	commitRequest.open("GET", "../CommitDatabase", true);
 	commitRequest.setRequestHeader("content-type", "application/json");
 	commitRequest.send();
+}
+
+function LogQuery(query) {
+	var logRequest = new XMLHttpRequest();
+	logRequest.onreadystatechange = function() 
+	{
+		if (this.readyState == 4 && this.status == 200) 
+		{
+			if (this.responseText === "SUCCESS")
+			{
+				console.log("Logged database change successfully");
+			}
+			else 
+			{
+				alert("Error logging change made to database");
+			}
+		}
+	};
+
+	logRequest.open("POST", "../LogQuery", true);
+	logRequest.setRequestHeader("content-type", "application/json");
+	logRequest.send(JSON.stringify({'query' : query}));
 }
